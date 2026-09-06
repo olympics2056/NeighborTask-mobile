@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f7f4" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>NeighborTask</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="phone-shell">
+    <header class="app-header">
+      <div>
+        <div class="brand-row"><span class="brand-mark">N</span><strong>NeighborTask</strong></div>
+        <p>Local help, without the noise.</p>
+      </div>
+      <button class="icon-btn" id="locationBtn" aria-label="Use location">⌖</button>
+    </header>
+
+    <section class="hero-card">
+      <span class="eyebrow">NEARBY HELP NETWORK</span>
+      <h1>What do you need today?</h1>
+      <p>Ask for help, or lend a hand nearby. Paid and volunteer tasks live together.</p>
+      <div class="hero-actions">
+        <button class="primary" data-open="need">I need help</button>
+        <button class="secondary" data-open="helper">I can help</button>
+      </div>
+    </section>
+
+    <section class="section-head">
+      <div><span class="eyebrow">AROUND YOU</span><h2>Needs near me</h2></div>
+      <button class="text-btn" id="refreshBtn">Refresh</button>
+    </section>
+    <div id="feed" class="feed" aria-live="polite"><div class="empty">Loading nearby needs…</div></div>
+
+    <section class="trust-card">
+      <div class="trust-icon">✓</div>
+      <div><strong>Privacy first</strong><p>Exact addresses and contact details are never shown in the public feed. Publicly discovered requests stay unverified until the requester claims them.</p></div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab active" data-tab="home"><span>⌂</span>Home</button>
+    <button class="tab" id="nearbyTab"><span>◎</span>Nearby</button>
+    <button class="fab" data-open="need" aria-label="Create request">＋</button>
+    <button class="tab" data-open="helper"><span>♡</span>Help</button>
+    <button class="tab" id="aiBtn"><span>✦</span>AI</button>
+  </nav>
+
+  <dialog id="needDialog" class="sheet">
+    <form id="needForm" method="dialog">
+      <div class="sheet-handle"></div><div class="sheet-top"><div><span class="eyebrow">CREATE A NEED</span><h2>I need help</h2></div><button value="cancel" class="close">×</button></div>
+      <label>What do you need help with?<input name="title" required maxlength="120" placeholder="e.g. Help move a dresser" /></label>
+      <label>Category<select name="category"><option value="yard">Yard work</option><option value="moving">Moving</option><option value="cleaning">Cleaning</option><option value="assembly">Assembly</option><option value="home_repair">Small repair</option><option value="pickup_delivery">Pickup / delivery</option><option value="pet">Pet help</option><option value="tech">Tech help</option><option value="elder_support">Neighbor support</option><option value="other">Other</option></select></label>
+      <label>Details<textarea name="description" rows="3" maxlength="2000" placeholder="A few details help us find the right neighbor."></textarea></label>
+      <div class="two"><label>Type<select name="helpType"><option value="either">Paid or free</option><option value="paid">Paid</option><option value="volunteer">Volunteer</option></select></label><label>Area<input name="locationLabel" value="Naperville" maxlength="120" /></label></div>
+      <label class="check"><input name="confirm" type="checkbox" required /> I understand my exact address and contact details will stay private until I choose to share them.</label>
+      <button class="primary wide" type="submit">Post request</button>
+    </form>
+  </dialog>
+
+  <dialog id="helperDialog" class="sheet">
+    <form id="helperForm" method="dialog">
+      <div class="sheet-handle"></div><div class="sheet-top"><div><span class="eyebrow">HELPER PROFILE</span><h2>I can help</h2></div><button value="cancel" class="close">×</button></div>
+      <label>Name<input name="displayName" required maxlength="80" placeholder="First name or nickname" /></label>
+      <label>How far would you travel?<input name="radiusMiles" type="range" min="1" max="15" value="3" /><span id="radiusValue">3 miles</span></label>
+      <fieldset><legend>What can you help with?</legend><div class="chips"><label><input type="checkbox" name="categories" value="yard"/>Yard</label><label><input type="checkbox" name="categories" value="moving"/>Moving</label><label><input type="checkbox" name="categories" value="assembly"/>Assembly</label><label><input type="checkbox" name="categories" value="pickup_delivery"/>Pickup</label><label><input type="checkbox" name="categories" value="home_repair"/>Repair</label><label><input type="checkbox" name="categories" value="pet"/>Pets</label></div></fieldset>
+      <fieldset><legend>Help preference</legend><div class="chips"><label><input type="checkbox" name="helpTypes" value="paid" checked/>Paid</label><label><input type="checkbox" name="helpTypes" value="volunteer"/>Volunteer</label></div></fieldset>
+      <button class="primary wide" type="submit">Save helper profile</button>
+    </form>
+  </dialog>
+
+  <dialog id="detailDialog" class="sheet detail-sheet"><div id="detailBody"></div></dialog>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

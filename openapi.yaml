@@ -1,0 +1,276 @@
+openapi: 3.1.0
+info:
+  title: NeighborTask Concierge API
+  version: 1.1.0
+  description: Search approved public-need sources and manage the consent-first NeighborTask workflow.
+servers:
+  - url: https://YOUR-PUBLIC-DOMAIN.example.com
+security:
+  - apiKeyAuth: []
+paths:
+  /api/health:
+    get:
+      operationId: getHealth
+      summary: Check API and connector availability
+      responses:
+        "200":
+          description: Health and connector status
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/GenericResponse"}
+  /api/public-needs/search:
+    post:
+      operationId: searchPublicNeeds
+      summary: Search all configured and permitted structured public-need sources
+      description: Returns unverified leads plus a coverage report. It never searches private or login-gated sources.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [geography]
+              properties:
+                geography: {type: string, maxLength: 120}
+                keywords:
+                  type: array
+                  maxItems: 10
+                  items: {type: string, maxLength: 60}
+                sources:
+                  type: array
+                  items:
+                    type: string
+                    enum: [local, partner, public_feed, nextdoor]
+                freshnessHours: {type: integer, minimum: 1, maximum: 2160, default: 168}
+                limit: {type: integer, minimum: 1, maximum: 50, default: 20}
+      responses:
+        "200":
+          description: Search results and per-source coverage
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/SearchResponse"}
+  /api/import/public-link:
+    post:
+      operationId: importPublicLink
+      summary: Import a user-submitted permitted public link as an unverified lead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sourceUrl, text]
+              properties:
+                sourceUrl: {type: string, format: uri, maxLength: 500}
+                source: {type: string, maxLength: 80}
+                title: {type: string, maxLength: 160}
+                text: {type: string, maxLength: 5000}
+                category: {type: string, maxLength: 80}
+                neighborhood: {type: string, maxLength: 120}
+                publishedAt: {type: string, format: date-time}
+      responses:
+        "201":
+          description: Redacted lead
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/GenericResponse"}
+  /api/redact-classify:
+    post:
+      operationId: redactAndClassify
+      summary: Redact personal data and classify a possible local need
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: {type: string, maxLength: 5000}
+                service: {type: string, maxLength: 80}
+      responses:
+        "200":
+          description: Redacted and classified content
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/GenericResponse"}
+  /api/leads/{leadId}/review:
+    post:
+      operationId: submitForAdminReview
+      summary: Submit a lead to admin review
+      parameters:
+        - in: path
+          name: leadId
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          description: Updated lead
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/GenericResponse"}
+  /api/leads/{leadId}/consent:
+    post:
+      operationId: requestConsent
+      summary: Record that consent outreach was approved or requester consent was received
+      parameters:
+        - in: path
+          name: leadId
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [mark_requested, record_received]
+                consentSource: {type: string, maxLength: 120}
+                explicitConfirmation: {type: boolean}
+      responses:
+        "200":
+          description: Updated consent state
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/GenericResponse"}
+  /api/estimate:
+    post:
+      operationId: createEstimate
+      summary: Create a service estimate without collecting contact details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/Intake"}
+      responses:
+        "201":
+          description: Estimate awaiting customer confirmation
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/GenericResponse"}
+  /api/customer/confirm:
+    post:
+      operationId: confirmCustomer
+      summary: Confirm customer contact and booking consent after an estimate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestId, customerName, phone, email, address, city, consent]
+              properties:
+                requestId: {type: string}
+                customerName: {type: string, maxLength: 100}
+                phone: {type: string, maxLength: 30}
+                email: {type: string, format: email, maxLength: 200}
+                address: {type: string, maxLength: 250}
+                city: {type: string, maxLength: 100}
+                consent: {type: boolean}
+      responses:
+        "200":
+          description: Confirmed customer request
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/GenericResponse"}
+  /api/job-tickets:
+    post:
+      operationId: createJobTicket
+      summary: Create a protected job ticket from a confirmed request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestId, explicitConfirmation]
+              properties:
+                requestId: {type: string}
+                explicitConfirmation: {type: boolean}
+      responses:
+        "201":
+          description: Created job ticket
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/GenericResponse"}
+  /api/job-tickets/{jobId}/release:
+    post:
+      operationId: releaseForMatching
+      summary: Release a confirmed job ticket for helper matching
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [explicitConfirmation]
+              properties:
+                explicitConfirmation: {type: boolean}
+      responses:
+        "200":
+          description: Released job ticket
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/GenericResponse"}
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    Intake:
+      type: object
+      required: [service, neighborhood, date, time, details]
+      properties:
+        service: {type: string, maxLength: 80}
+        neighborhood: {type: string, maxLength: 120}
+        date: {type: string, format: date}
+        time: {type: string, maxLength: 80}
+        details: {type: string, maxLength: 2000}
+        size: {type: string, maxLength: 120}
+        backgroundOnly: {type: boolean}
+    Lead:
+      type: object
+      properties:
+        id: {type: string}
+        source: {type: string}
+        sourceUrl: {type: string}
+        title: {type: string}
+        summary: {type: string}
+        neighborhood: {type: string}
+        category: {type: string}
+        publishedAt: {type: string}
+        status: {type: string}
+        verification: {type: string}
+    SearchResponse:
+      type: object
+      properties:
+        ok: {type: boolean}
+        items:
+          type: array
+          items: {$ref: "#/components/schemas/Lead"}
+        coverage:
+          type: array
+          items:
+            type: object
+            properties:
+              source: {type: string}
+              status: {type: string}
+              count: {type: integer}
+              note: {type: string}
+        limitations:
+          type: array
+          items: {type: string}
+    GenericResponse:
+      type: object
+      additionalProperties: true
