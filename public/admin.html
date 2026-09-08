@@ -1,0 +1,7 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NeighborTask 管理中心</title><link rel="stylesheet" href="/admin.css"></head><body>
+<header><a href="/">N · NeighborTask</a><span>管理中心</span><button id="logout" hidden>退出登录</button></header>
+<main><h1>社区管理</h1><p>成员可以同时求助和提供帮助；管理员拥有额外的审核权限。</p><p id="notice" role="status"></p>
+<form id="login"><h2>管理员登录</h2><label>用户名<input name="username" autocomplete="username" required value="admin"></label><label>密码<input name="password" type="password" autocomplete="current-password" required></label><button>登录</button><p>仅管理员可访问审核数据。密码由部署负责人配置。</p></form>
+<section id="dashboard" hidden><aside id="storage"></aside><div class="toolbar"><h2>运营概览</h2><button id="refresh">刷新</button></div><div id="stats"></div><p>“平台审核通过”仅表示允许匹配，不代表完成身份认证、背景调查或投保。示例 Helper 会单独标注。</p>
+<nav><button data-panel="needs">需求管理</button><button data-panel="helpers">Helper 审核</button><button data-panel="audit">操作记录</button></nav><label>搜索<input id="search" placeholder="名称、类别或状态"></label><div id="records"></div></section>
+</main><dialog id="actionDialog"><form id="actionForm"><h2 id="actionTitle">确认管理操作</h2><p id="actionTarget"></p><label>操作原因<input name="reason" required maxlength="500" autocomplete="off"></label><p id="actionError" role="alert"></p><button type="submit">确认保存</button> <button type="button" id="cancelAction">取消</button></form></dialog><script src="/admin.js" type="module"></script></body></html>

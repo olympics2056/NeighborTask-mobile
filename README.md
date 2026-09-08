@@ -1,5 +1,13 @@
 # NeighborTask Mobile v3 — Discovery Engine MVP
 
+## Administrator preview (2026-09-07)
+
+`/admin` adds authenticated Helper approval/suspension/revocation, Need rejection/expiry, search, counts and audit history. See [ADMIN_GUIDE.md](ADMIN_GUIDE.md) for owner-only credential setup. No default password: set `ADMIN_PASSWORD` (16+ characters) or `ADMIN_PASSWORD_HASH`; use `NODE_ENV=production` online.
+
+Controlled test release only: member authentication/ownership and verified external claims remain missing; JSON requires durable hosting before real operations. A person may be requester and helper by design, but shared member accounts are not yet implemented. Admin approval is not identity/background verification or insurance.
+
+Validation: 28 automated tests plus extended full-server smoke; local browser login, moderation confirmation and audit display. Three admin review rounds are recorded in MODEL_REVIEW.md.
+
 Mobile-first NeighborTask MVP built around the product model: **Need → Understand → Verify → Open → Match → Connect**.
 
 This version replaces the chat-first v1 homepage with a mobile/PWA interface focused on:

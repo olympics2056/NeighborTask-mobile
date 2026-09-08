@@ -9,6 +9,7 @@ import { publicNeedWithDistance, parseViewer } from './domain/api-utils.mjs';
 import { demoNeeds, demoHelpers } from './domain/seed.mjs';
 import { DiscoveryEngine } from './discovery/engine.mjs';
 import { createRawCandidate, StaticPublicConnector } from './discovery/sources.mjs';
+import { createAdmin, passwordHash } from './admin.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
@@ -16,6 +17,9 @@ const WORKFLOW_PORT = Number(process.env.WORKFLOW_PORT || 3001);
 const sessions = new Map();
 const store = new JsonStore(process.env.NEIGHBORTASK_DATA_FILE || path.join(__dirname, 'data', 'neighbortask.json'));
 const discovery = new DiscoveryEngine({ store });
+const configuredPassword = process.env.ADMIN_PASSWORD || '';
+const adminHash = process.env.ADMIN_PASSWORD_HASH || (configuredPassword.length >= 16 ? await passwordHash(configuredPassword) : '');
+const adminHandler = createAdmin({store,json,readJson,hash:adminHash});
 await store.init();
 if (process.env.SEED_DEMO !== 'false') await store.seed({ needs: demoNeeds, helpers: demoHelpers });
 
@@ -46,7 +50,7 @@ async function serveStatic(urlPath, res) {
     const data = await fs.readFile(fullPath);
     const ext = path.extname(fullPath).toLowerCase();
     const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png' };
-    res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream', 'Cache-Control': ext === '.html' ? 'no-store' : 'public, max-age=3600' });
+    res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream', 'Cache-Control': ext === '.html' || safePath.startsWith('/admin') ? 'no-store' : 'public, max-age=3600', 'X-Content-Type-Options':'nosniff', ...(safePath.startsWith('/admin') ? {'Content-Security-Policy':"default-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'none'",'Referrer-Policy':'no-referrer'} : {}) });
     res.end(data);
     return true;
   } catch {
@@ -76,6 +80,8 @@ await waitForWorkflow();
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host || `localhost:${PORT}`}`);
+    if(await adminHandler(req,res,url))return;
+    if(req.method==='GET' && url.pathname==='/admin')return void await serveStatic('/admin.html',res);
 
     if (req.method === 'GET' && url.pathname === '/api/app-health') {
       return json(res, 200, { ok: true, app: 'NeighborTask', agent: Boolean(process.env.OPENAI_API_KEY), workflow: workflow.exitCode === null, modelVersion:'v3' });

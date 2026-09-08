@@ -1,5 +1,21 @@
 # NeighborTask v3 — Core Model and Discovery Review
 
+## Administrator review — 2026-09-07
+
+### Round 1: Draft → Review → Test → Improve
+
+Draft: isolated admin login/session routes and moderation UI. Review: missing login Origin checks, hash configuration ergonomics, storage failures could poison subsequent saves, corrupt JSON could be overwritten. Improve: Origin validation, owner-set password support (hashed at startup), stronger hash format checks, serialized initialization and moderation, rollback on moderation save failure, fail closed on corrupt files. Test: 28/28 tests pass including authorization, cookie protections, CSRF, expiry, rate limits, moderation gates and durable audit reload.
+
+### Round 2: Draft → Review → Test → Improve
+
+Draft: full-server smoke and local browser flow. Test: server smoke passed, but browser testing found the native prompt produced no visible confirmation and no saved action. Improve: replace prompt with an in-page dialog showing target, required reason, confirm/cancel and error state. Retest: actual browser login → Helper list → suspend demo Alex → saved state → audit reason/operator all displayed correctly. Also removed admin assets from service-worker cache and labeled demo/platform-reviewed matches honestly.
+
+### Round 3: Draft → Review → Test → Improve
+
+Draft: release review and handoff. Review: role text could imply implemented shared accounts; manual approval could imply identity verification; ephemeral storage cannot support real operations. Improve: explicit limitations and owner credential activation instructions in ADMIN_GUIDE/README; no paid infrastructure added. Final regression uses the complete automated suite and extended full-server smoke before publishing.
+
+Admin does not bypass external state transitions. Legacy claim currently checks self-asserted confirmation only, not a real signature or requester identity. This is a known production blocker, not evidence of verified ownership. Shared requester/helper accounts and their lifecycle are next-phase work. Audit records remain in the same JSON file, not tamper-proof external storage.
+
 ## Product invariant
 NeighborTask is a matching network, not a social feed. Every input source is normalized into a Need. External public discoveries are leads only and cannot enter matching until the requester claims and verifies them.
 
