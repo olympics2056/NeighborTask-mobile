@@ -1,5 +1,7 @@
 # NeighborTask Mobile v3 — Discovery Engine MVP
 
+Submit hotfix: successful Need creation now resets the form and refreshes the feed without an erroneous null reset message. Pending submissions are guarded against repeated clicks. 31 automated tests and full-server smoke pass.
+
 ## Administrator preview (2026-09-07)
 
 `/admin` adds authenticated Helper approval/suspension/revocation, Need rejection/expiry, search, counts and audit history. See [ADMIN_GUIDE.md](ADMIN_GUIDE.md) for owner-only credential setup. No default password: set `ADMIN_PASSWORD` (16+ characters) or `ADMIN_PASSWORD_HASH`; use `NODE_ENV=production` online.

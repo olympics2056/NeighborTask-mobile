@@ -1,5 +1,11 @@
 # NeighborTask v3 — Core Model and Discovery Review
 
+## Submit hotfix — 2026-09-07
+
+Live UI testing exposed a frontend-only bug missed by HTTP smoke tests: the POST succeeded, then event.currentTarget was null after await, so reset threw and automatic feed refresh never ran. Capture the form before await; reset/close only after successful save; disable the submit button and guard repeated submits until completion. Version the app script and shell cache so existing clients fetch the fix on reload.
+
+Added frontend VM tests executing the actual app script with browser-like currentTarget lifetime: success/reset/automatic feed update and duplicate-submit suppression; failed save preserves form and unlocks retry; feed fetch failure does not falsely report a failed publication. Full suite: 31/31; full-server smoke passed. This is click-level suppression, not server-side idempotency across retries or tabs.
+
 ## Administrator review — 2026-09-07
 
 ### Round 1: Draft → Review → Test → Improve

@@ -11,7 +11,20 @@ async function showNeed(id){const n=needs.find(x=>x.id===id);if(!n)return;const 
 body.innerHTML=`<div class="sheet-handle"></div><button class="close" style="float:right" onclick="this.closest('dialog').close()">×</button><div class="big-icon">${icons[n.category]||'🤝'}</div><span class="eyebrow">${n.origin==='external'?'PUBLIC LEAD — UNVERIFIED':'OPEN NEED'}</span><h2>${escapeHtml(n.title)}</h2><p>${escapeHtml(n.description||'No additional details.')}</p><div class="meta"><span>${n.distanceMiles??'Nearby'}${n.distanceMiles!=null?' mi':''}</span><span>•</span><span>${escapeHtml(n.location.label||'Local area')}</span><span>•</span><span>${money(n)}</span></div>${n.origin==='external'?'<div class="trust-card"><div class="trust-icon">!</div><div><strong>Not matchable yet</strong><p>This request was discovered publicly. The original requester must claim and verify it before NeighborTask can connect helpers.</p></div></div>':matches}`;dlg.showModal()}
 $$('[data-open="need"]').forEach(b=>b.onclick=()=>$('#needDialog').showModal());$$('[data-open="helper"]').forEach(b=>b.onclick=()=>$('#helperDialog').showModal());
 $('#radiusValue').textContent='3 miles';$('#helperForm [name=radiusMiles]').oninput=e=>$('#radiusValue').textContent=`${e.target.value} miles`;
-$('#needForm').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api('/api/needs',{method:'POST',body:JSON.stringify({title:f.get('title'),category:f.get('category'),description:f.get('description'),helpType:f.get('helpType'),location:{label:f.get('locationLabel'),lat:viewer.lat,lng:viewer.lng,precision:'approximate'},time:{flexible:true}})});$('#needDialog').close();e.currentTarget.reset();toast('Request posted');load()}catch(err){toast(err.message)}});
+$('#needForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const form=e.currentTarget;
+  if(form.dataset.submitting==='true')return;
+  const submit=form.querySelector('button[type="submit"]');
+  const f=new FormData(form);
+  form.dataset.submitting='true';submit.disabled=true;
+  try{
+    await api('/api/needs',{method:'POST',body:JSON.stringify({title:f.get('title'),category:f.get('category'),description:f.get('description'),helpType:f.get('helpType'),location:{label:f.get('locationLabel'),lat:viewer.lat,lng:viewer.lng,precision:'approximate'},time:{flexible:true}})});
+    form.reset();$('#needDialog').close();toast('Request posted');
+    await load();
+  }catch(err){toast(err.message);}
+  finally{delete form.dataset.submitting;submit.disabled=false;}
+});
 $('#helperForm').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api('/api/helpers',{method:'POST',body:JSON.stringify({displayName:f.get('displayName'),radiusMiles:Number(f.get('radiusMiles')),home:{label:'Naperville',lat:viewer.lat,lng:viewer.lng},categories:f.getAll('categories'),helpTypes:f.getAll('helpTypes')})});$('#helperDialog').close();toast('Helper application saved — awaiting platform review')}catch(err){toast(err.message)}});
 $('#locationBtn').onclick=()=>{if(!navigator.geolocation)return toast('Location is not supported');navigator.geolocation.getCurrentPosition(p=>{viewer={lat:p.coords.latitude,lng:p.coords.longitude};toast('Using your approximate location');load()},()=>toast('Location permission was not granted'),{enableHighAccuracy:false,timeout:7000})};
 $('#refreshBtn').onclick=load;$('#nearbyTab').onclick=()=>{window.scrollTo({top:document.querySelector('.section-head').offsetTop-20,behavior:'smooth'})};$('#aiBtn').onclick=()=>toast('AI assistant is available as a secondary tool in this MVP.');
